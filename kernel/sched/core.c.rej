@@ -1,0 +1,16 @@
+--- kernel/sched/core.c
++++ kernel/sched/core.c
+@@ -2518,12 +2651,7 @@ void calc_global_load(unsigned long ticks)
+ 	calc_load_update += LOAD_FREQ;
+ 
+ 	/*
+-	 * Account one period with whatever state we found before
+-	 * folding in the nohz state and ageing the entire idle period.
+-	 *
+-	 * This avoids loosing a sample when we go idle between 
+-	 * calc_load_account_active() (10 ticks ago) and now and thus
+-	 * under-accounting.
++	 * In case we idled for multiple LOAD_FREQ intervals, catch up in bulk.
+ 	 */
+ 	calc_global_nohz();
+ }
