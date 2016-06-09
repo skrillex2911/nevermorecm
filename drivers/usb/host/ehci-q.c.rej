@@ -4,8 +4,8 @@
  		 * qtd is updated in qh_completions(). Update the QH
  		 * overlay here.
  		 */
--		if (cpu_to_hc32(ehci, qtd->qtd_dma) == qh->hw->hw_current) {
-+		if (qh->hw->hw_token & ACTIVE_BIT(ehci)) {
+-		if (qh->hw->hw_token & ACTIVE_BIT(ehci)) {
++		if (cpu_to_hc32(ehci, qtd->qtd_dma) == qh->hw->hw_current) {
  			qh->hw->hw_qtd_next = qtd->hw_next;
  			qtd = NULL;
  		}
