@@ -1,0 +1,11 @@
+--- drivers/usb/host/ehci-q.c
++++ drivers/usb/host/ehci-q.c
+@@ -135,7 +135,7 @@ qh_refresh (struct ehci_hcd *ehci, struct ehci_qh *qh)
+ 		 * qtd is updated in qh_completions(). Update the QH
+ 		 * overlay here.
+ 		 */
+-		if (qh->hw->hw_token & ACTIVE_BIT(ehci)) {
++		if (cpu_to_hc32(ehci, qtd->qtd_dma) == qh->hw->hw_current) {
+ 			qh->hw->hw_qtd_next = qtd->hw_next;
+ 			qtd = NULL;
+ 		}

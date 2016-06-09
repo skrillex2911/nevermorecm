@@ -1641,16 +1641,17 @@ static int pl330_submit_req(void *ch_id, struct pl330_req *r)
 		goto xfer_exit;
 	}
 
+	/* Use last settings, if not provided */
 	if (r->cfg) {
 		/* Prefer Secure Channel */
 		if (!_manager_ns(thrd))
 			r->cfg->nonsecure = 0;
 		else
 			r->cfg->nonsecure = 1;
+
 		ccr = _prepare_ccr(r->cfg);
 	} else {
-		/* Use last settings, if not provided */
-		ccr = readl(regs + CC(thrd->id));
+ 		ccr = readl(regs + CC(thrd->id));
 	}
 
 	/* If this req doesn't have valid xfer settings */
@@ -2407,7 +2408,7 @@ static void pl330_tasklet(unsigned long data)
 	/* Pick up ripe tomatoes */
 	list_for_each_entry_safe(desc, _dt, &pch->work_list, node)
 		if (desc->status == DONE) {
-			if (pch->cyclic)
+			if (!pch->cyclic)
 				pch->chan.completed_cookie = desc->txd.cookie;
 			else
 				dma_cookie_complete(&desc->txd);
