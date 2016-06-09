@@ -672,6 +672,7 @@ static struct file *__dentry_open(struct dentry *dentry, struct vfsmount *mnt,
 	f->f_path.dentry = dentry;
 	f->f_path.mnt = mnt;
 	f->f_pos = 0;
+	file_sb_list_add(f, inode->i_sb);
 
 	if (unlikely(f->f_mode & FMODE_PATH)) {
 		f->f_op = &empty_fops;
@@ -729,6 +730,7 @@ cleanup_all:
 			mnt_drop_write(mnt);
 		}
 	}
+	file_sb_list_del(f);
 	f->f_path.dentry = NULL;
 	f->f_path.mnt = NULL;
 cleanup_file:
@@ -880,10 +882,9 @@ static inline int build_open_flags(int flags, umode_t mode, struct open_flags *o
 	int lookup_flags = 0;
 	int acc_mode;
 
-	if (flags & O_CREAT)
-		op->mode = (mode & S_IALLUGO) | S_IFREG;
-	else
-		op->mode = 0;
+	if (!(flags & O_CREAT))
+		mode = 0;
+	op->mode = mode;
 
 	/* Must never be set by userspace */
 	flags &= ~FMODE_NONOTIFY;
