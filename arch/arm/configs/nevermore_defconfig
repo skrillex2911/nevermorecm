@@ -342,6 +342,7 @@ CONFIG_S5P_DEV_CSIS0=y
 CONFIG_S5P_DEV_CSIS1=y
 CONFIG_S5P_DEV_CSIS2=y
 CONFIG_SAMSUNG_DMADEV=y
+CONFIG_CMDLINE="console=ttySAC2,115200n8 vmalloc=512M androidboot.console=ttySAC2 androidboot.hardware=universal5410 androidboot.selinux=disabled"
 
 #
 # Power management
