@@ -19,10 +19,9 @@ ccflags-y := \
 	-Wstrict-prototypes\
 	-Wno-unused-parameter\
 	-Wno-sign-compare\
-	-Werror\
 	-fno-strict-aliasing\
 	-Wno-pointer-arith\
-	-Os
+	-O2
 
 ccflags-y += -DLINUX -D__linux__ -DANDROID
 
@@ -188,7 +187,7 @@ pvrsrvkm-$(CONFIG_SOC_EXYNOS5410) += \
 ifeq ($(CONFIG_SOC_EXYNOS5410),y)
 	pvrsrvkm-$(CONFIG_PVR_SGX_DVFS) += \
 	services4/system/exynos5410/secutils.o \
-	services4/system/exynos5410/sec_dvfs.o
+	services4/system/exynos5410/perseus_dvfs.o
 
 ccflags-$(CONFIG_PVR_SGX_DVFS) += \
 	-DSYS_SUPPORTS_SGX_IDLE_CALLBACK

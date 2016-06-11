@@ -35,6 +35,7 @@
 #include <linux/buffer_head.h> /* __set_page_dirty_buffers */
 #include <linux/pagevec.h>
 #include <trace/events/writeback.h>
+#include <linux/powersuspend.h>
 
 /*
  * Sleep at most 200ms at a time in balance_dirty_pages().
@@ -82,7 +83,7 @@ int vm_highmem_is_dirtyable;
 /*
  * The generator of dirty data starts writeback at this percentage
  */
-int vm_dirty_ratio = 20;
+int vm_dirty_ratio = 1;
 
 /*
  * vm_dirty_bytes starts at 0 (disabled) so that it is a function of
@@ -93,14 +94,24 @@ unsigned long vm_dirty_bytes;
 /*
  * The interval between `kupdate'-style writebacks
  */
-unsigned int dirty_writeback_interval = 5 * 100; /* centiseconds */
+#define DEFAULT_DIRTY_WRITEBACK_INTERVAL 600 /* centiseconds */
+#define DEFAULT_SUSPEND_DIRTY_WRITEBACK_INTERVAL 6000 /* centiseconds */
+unsigned int dirty_writeback_interval,
+	resume_dirty_writeback_interval;
+unsigned int sleep_dirty_writeback_interval,
+	suspend_dirty_writeback_interval;
 
 EXPORT_SYMBOL_GPL(dirty_writeback_interval);
 
 /*
  * The longest time for which data is allowed to remain dirty
  */
-unsigned int dirty_expire_interval = 30 * 100; /* centiseconds */
+#define DEFAULT_DIRTY_EXPIRE_INTERVAL 3000 /* centiseconds */
+#define DEFAULT_SUSPEND_DIRTY_EXPIRE_INTERVAL 12000 /* centiseconds */
+unsigned int dirty_expire_interval,
+	resume_dirty_expire_interval;
+unsigned int sleep_dirty_expire_interval,
+	suspend_dirty_expire_interval;
 
 /*
  * Flag that makes the machine dump writes/reads and block dirtyings.
@@ -1590,15 +1601,50 @@ void writeback_set_ratelimit(void)
 }
 
 static int __cpuinit
-ratelimit_handler(struct notifier_block *self, unsigned long u, void *v)
+ratelimit_handler(struct notifier_block *self, unsigned long action,
+		  void *hcpu)
 {
-	writeback_set_ratelimit();
-	return NOTIFY_DONE;
+
+	switch (action & ~CPU_TASKS_FROZEN) {
+	case CPU_ONLINE:
+	case CPU_DEAD:
+		writeback_set_ratelimit();
+		return NOTIFY_OK;
+	default:
+		return NOTIFY_DONE;
+	}
 }
 
 static struct notifier_block __cpuinitdata ratelimit_nb = {
 	.notifier_call	= ratelimit_handler,
 	.next		= NULL,
+};
+
+static void dirty_early_suspend(struct power_suspend *handler)
+{
+	if (dirty_writeback_interval != resume_dirty_writeback_interval)
+		resume_dirty_writeback_interval = dirty_writeback_interval;
+	if (dirty_expire_interval != resume_dirty_expire_interval)
+		resume_dirty_expire_interval = dirty_expire_interval;
+
+	dirty_writeback_interval = suspend_dirty_writeback_interval;
+	dirty_expire_interval = suspend_dirty_expire_interval;
+}
+
+static void dirty_late_resume(struct power_suspend *handler)
+{
+	if (dirty_writeback_interval != suspend_dirty_writeback_interval)
+		suspend_dirty_writeback_interval = dirty_writeback_interval;
+	if (dirty_expire_interval != suspend_dirty_expire_interval)
+		suspend_dirty_expire_interval = dirty_expire_interval;
+
+	dirty_writeback_interval = resume_dirty_writeback_interval;
+	dirty_expire_interval = resume_dirty_expire_interval;
+}
+
+static struct power_suspend dirty_suspend = {
+	.suspend = dirty_early_suspend,
+	.resume = dirty_late_resume,
 };
 
 /*
@@ -1622,6 +1668,17 @@ static struct notifier_block __cpuinitdata ratelimit_nb = {
 void __init page_writeback_init(void)
 {
 	int shift;
+
+	dirty_writeback_interval = resume_dirty_writeback_interval =
+		DEFAULT_DIRTY_WRITEBACK_INTERVAL;
+	dirty_expire_interval = resume_dirty_expire_interval =
+		DEFAULT_DIRTY_EXPIRE_INTERVAL;
+	sleep_dirty_writeback_interval = suspend_dirty_writeback_interval =
+		DEFAULT_SUSPEND_DIRTY_WRITEBACK_INTERVAL;
+	sleep_dirty_expire_interval = suspend_dirty_expire_interval =
+		DEFAULT_SUSPEND_DIRTY_EXPIRE_INTERVAL;
+
+	register_power_suspend(&dirty_suspend);
 
 	writeback_set_ratelimit();
 	register_cpu_notifier(&ratelimit_nb);

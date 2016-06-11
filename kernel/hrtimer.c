@@ -1272,10 +1272,10 @@ static void __run_hrtimer(struct hrtimer *timer, ktime_t *now)
 	 * we do not reprogramm the event hardware. Happens either in
 	 * hrtimer_start_range_ns() or in hrtimer_interrupt()
 	 *
-	 * Note: Because we dropped the cpu_base->lock above,
-	 * hrtimer_start_range_ns() can have popped in and enqueued the timer
-	 * for us already.
-	 */
++	 * Note: Because we dropped the cpu_base->lock above,
++	 * hrtimer_start_range_ns() can have popped in and enqueued the timer
++	 * for us already.
+ 	 */
 	if (restart != HRTIMER_NORESTART &&
 	    !(timer->state & HRTIMER_STATE_ENQUEUED))
 		enqueue_hrtimer(timer, base);

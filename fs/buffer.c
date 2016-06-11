@@ -1070,7 +1070,7 @@ retry:
 	if (bh)
 		return bh;
 
-	ret = grow_buffers(bdev, block, size, gfp);
+		ret = grow_buffers(bdev, block, size, gfp);
 	if (ret == 0) {
 		free_more_memory();
 		goto retry;

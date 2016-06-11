@@ -1288,12 +1288,13 @@ static int ep_modify(struct eventpoll *ep, struct epitem *epi, struct epoll_even
 	epi->event.events = event->events; /* need barrier below */
 	pt._key = event->events;
 	epi->event.data = event->data; /* protected by mtx */
-	if (epi->event.events & EPOLLWAKEUP) {
+
+	/*if (epi->event.events & EPOLLWAKEUP) {
 		if (!epi->ws)
 			ep_create_wakeup_source(epi);
 	} else if (epi->ws) {
 		ep_destroy_wakeup_source(epi);
-	}
+	}*/
 
 	/*
 	 * The following barrier has two effects:

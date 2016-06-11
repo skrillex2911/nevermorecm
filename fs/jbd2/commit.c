@@ -1047,12 +1047,12 @@ restart_loop:
 	/* Drop all spin_locks because commit_callback may be block.
 	 * __journal_remove_checkpoint() can not destroy transaction
 	 * under us because it is not marked as T_FINISHED yet */
-	if (journal->j_commit_callback)
-		journal->j_commit_callback(journal, commit_transaction);
-
-	trace_jbd2_end_commit(journal, commit_transaction);
-	jbd_debug(1, "JBD2: commit %d complete, head %d\n",
-		  journal->j_commit_sequence, journal->j_tail_sequence);
+ 	if (journal->j_commit_callback)
+ 		journal->j_commit_callback(journal, commit_transaction);
+ 
+ 	trace_jbd2_end_commit(journal, commit_transaction);
+ 	jbd_debug(1, "JBD2: commit %d complete, head %d\n",
+ 		  journal->j_commit_sequence, journal->j_tail_sequence);
 
 	write_lock(&journal->j_state_lock);
 	spin_lock(&journal->j_list_lock);

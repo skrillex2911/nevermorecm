@@ -112,7 +112,16 @@ enum pageflags {
 	PG_scfslower,
 	PG_nocache,
 #endif
+#ifdef CONFIG_KSM_CHECK_PAGE
+	PG_ksm_scan0,		/* page has been scanned by even KSM cycle */
+#endif
+
 	__NR_PAGEFLAGS,
+
+#ifdef CONFIG_KSM_CHECK_PAGE
+	/* page has been scanned by odd KSM cycle */
+	PG_ksm_scan1 = PG_owner_priv_1,
+#endif
 
 	/* Filesystems */
 	PG_checked = PG_owner_priv_1,
@@ -213,6 +222,10 @@ PAGEFLAG(Reserved, reserved) __CLEARPAGEFLAG(Reserved, reserved)
 PAGEFLAG(SwapBacked, swapbacked) __CLEARPAGEFLAG(SwapBacked, swapbacked)
 
 __PAGEFLAG(SlobFree, slob_free)
+#ifdef CONFIG_KSM_CHECK_PAGE
+CLEARPAGEFLAG(KsmScan0, ksm_scan0) TESTSETFLAG(KsmScan0, ksm_scan0)
+CLEARPAGEFLAG(KsmScan1, ksm_scan1) TESTSETFLAG(KsmScan1, ksm_scan1)
+#endif
 
 /*
  * Private page markings that may be used by the filesystem that owns the page
@@ -281,6 +294,11 @@ PAGEFLAG_FALSE(HWPoison)
 #ifdef CONFIG_SCFS_LOWER_PAGECACHE_INVALIDATION
 PAGEFLAG(Scfslower, scfslower)
 PAGEFLAG(Nocache, nocache)
+#endif
+
+#ifdef CONFIG_PKSM
+PAGEFLAG(PKSM, pksm) __CLEARPAGEFLAG(PKSM, pksm)
+TESTSCFLAG(PKSM, pksm)
 #endif
 
 u64 stable_page_flags(struct page *page);

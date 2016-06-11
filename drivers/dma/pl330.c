@@ -1641,7 +1641,7 @@ static int pl330_submit_req(void *ch_id, struct pl330_req *r)
 		goto xfer_exit;
 	}
 
-	/* Use last settings, if not provided */
+ 	/* Use last settings, if not provided */
 	if (r->cfg) {
 		/* Prefer Secure Channel */
 		if (!_manager_ns(thrd))
@@ -1649,7 +1649,7 @@ static int pl330_submit_req(void *ch_id, struct pl330_req *r)
 		else
 			r->cfg->nonsecure = 1;
 
-		ccr = _prepare_ccr(r->cfg);
+ 		ccr = _prepare_ccr(r->cfg);
 	} else {
  		ccr = readl(regs + CC(thrd->id));
 	}
@@ -2409,11 +2409,15 @@ static void pl330_tasklet(unsigned long data)
 	list_for_each_entry_safe(desc, _dt, &pch->work_list, node)
 		if (desc->status == DONE) {
 			if (!pch->cyclic)
+ 				dma_cookie_complete(&desc->txd);
+ 			list_move_tail(&desc->node, &list);
+ 		}
+	/*		if (pch->cyclic)
 				pch->chan.completed_cookie = desc->txd.cookie;
 			else
 				dma_cookie_complete(&desc->txd);
 			list_move_tail(&desc->node, &list);
-		}
+		}*/
 
 	/* Try to submit a req imm. next to the last completed cookie */
 	fill_queue(pch);
@@ -2557,6 +2561,8 @@ static void pl330_free_chan_resources(struct dma_chan *chan)
 	struct dma_pl330_chan *pch = to_pchan(chan);
 	unsigned long flags;
 
+ 	tasklet_kill(&pch->task);
+ 
 	spin_lock_irqsave(&pch->lock, flags);
 
 	pl330_release_channel(pch->pl330_chid);

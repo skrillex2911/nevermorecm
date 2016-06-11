@@ -71,11 +71,25 @@
 #define SMC_PROTECTION_SET	0x81000000
 #define SMC_DRM_FW_LOADING	0x81000001
 #define SMC_SUPPORT		0x81000002
+#define SMC_DRM_MAKE_PGTABLE	0x81000003
+#define SMC_DRM_CLEAR_PGTABLE	0x81000004
 #define SMC_MEM_PROT_SET	0x81000005
+#define SMC_DRM_SECMEM_INFO	0x81000006
 
 /* Parameter for smc */
 #define SMC_PROTECTION_ENABLE	1
 #define SMC_PROTECTION_DISABLE	0
+
+enum {
+	FC_MFC_EXYNOS_ID_MFC_SH         = 0,
+	FC_MFC_EXYNOS_ID_FIMD_VIDEO	= 1,
+	FC_MFC_EXYNOS_ID_MFC_INPUT      = 2,
+	FC_MFC_EXYNOS_ID_MFC_FW         = 3,
+	FC_MFC_EXYNOS_ID_SECTBL         = 4,
+	FC_MFC_EXYNOS_ID_G2D_WFD        = 5,
+	FC_MFC_EXYNOS_ID_MFC_NFW        = 6,
+	FC_MFC_EXYNOS_ID_MFC_OUT	= 7,
+};
 
 /* Maximum number of temporal layers */
 #define VIDEO_MAX_TEMPORAL_LAYERS 7
@@ -424,7 +438,7 @@ struct s5p_mfc_enc_params {
 	u16 width;
 	u16 height;
 
-	u16 gop_size;
+	u32 gop_size;
 	enum v4l2_mpeg_video_multi_slice_mode slice_mode;
 	u16 slice_mb;
 	u32 slice_bit;
@@ -839,7 +853,8 @@ static inline unsigned int mfc_version(struct s5p_mfc_dev *dev)
 					(dev->fw.date >= 0x130405))
 #define FW_HAS_DYNAMIC_DPB(dev)		(IS_MFCV6(dev) &&		\
 					(dev->fw.date >= 0x131005))
-
+#define FW_HAS_GOP2(dev)		(IS_MFCV6(dev) &&		\
+					(dev->fw.date >= 0x150323))
 
 #define HW_LOCK_CLEAR_MASK		(0xFFFFFFFF)
 

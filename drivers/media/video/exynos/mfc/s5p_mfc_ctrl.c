@@ -116,7 +116,6 @@ int s5p_mfc_alloc_firmware(struct s5p_mfc_dev *dev)
 		return -EIO;
 	}
 
-	if (!dev->num_drm_inst) {
 		s5p_mfc_bitproc_virt =
 				s5p_mfc_mem_vaddr_priv(s5p_mfc_bitproc_buf);
 		mfc_debug(2, "Virtual address for FW: %08lx\n",
@@ -128,7 +127,6 @@ int s5p_mfc_alloc_firmware(struct s5p_mfc_dev *dev)
 			s5p_mfc_bitproc_buf = 0;
 			return -EIO;
 		}
-	}
 
 	dev->port_a = s5p_mfc_bitproc_phys;
 

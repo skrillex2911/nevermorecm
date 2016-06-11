@@ -108,19 +108,6 @@ unsigned long dirty_balance_reserve __read_mostly;
 int percpu_pagelist_fraction;
 gfp_t gfp_allowed_mask __read_mostly = GFP_BOOT_MASK;
 
-static unsigned int boot_mode = 0;
-static int __init setup_bootmode(char *str)
-{
-	printk("%s: boot_mode is %u\n", __func__, boot_mode);
-	if (get_option(&str, &boot_mode)) {
-		printk("%s: boot_mode is %u\n", __func__, boot_mode);
-		return 0;
-	}
-
-	return -EINVAL;
-}
-early_param("bootmode", setup_bootmode);
-
 #ifdef CONFIG_PM_SLEEP
 /*
  * The following functions are used by the suspend/hibernate code to temporarily
@@ -2284,7 +2271,7 @@ __alloc_pages_slowpath(gfp_t gfp_mask, unsigned int order,
 	bool sync_migration = false;
 	bool deferred_compaction = false;
 #ifdef CONFIG_ANDROID_WIP
-	unsigned long oom_invoke_timeout = jiffies + HZ/4;
+	unsigned long oom_invoke_timeout = jiffies + HZ/32;
 #endif
 
 	/*
@@ -2396,9 +2383,9 @@ rebalance:
 	 * running out of options and have to consider going OOM
 	 */
 #ifdef CONFIG_ANDROID_WIP
-#define SHOULD_CONSIDER_OOM (!did_some_progress || time_after(jiffies, oom_invoke_timeout)) && (boot_mode != 2)
+#define SHOULD_CONSIDER_OOM !did_some_progress || time_after(jiffies, oom_invoke_timeout)
 #else
-#define SHOULD_CONSIDER_OOM !did_some_progress && (boot_mode != 2)
+#define SHOULD_CONSIDER_OOM !did_some_progress
 #endif
 	if (SHOULD_CONSIDER_OOM) {
 		if ((gfp_mask & __GFP_FS) && !(gfp_mask & __GFP_NORETRY)) {
@@ -2439,7 +2426,7 @@ rebalance:
 					goto nopage;
 			}
 #ifdef CONFIG_ANDROID_WIP
-			oom_invoke_timeout = jiffies + HZ/4;
+			oom_invoke_timeout = jiffies + HZ/32;
 #endif
 			goto restart;
 		}

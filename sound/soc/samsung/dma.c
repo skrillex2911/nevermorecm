@@ -262,7 +262,7 @@ static int dma_trigger(struct snd_pcm_substream *substream, int cmd)
 
 	case SNDRV_PCM_TRIGGER_STOP:
 	        prtd->state &= ~ST_RUNNING;
-		prtd->params->ops->stop(prtd->params->ch);
+//		prtd->params->ops->stop(prtd->params->ch);
 		break;
 
 	default:

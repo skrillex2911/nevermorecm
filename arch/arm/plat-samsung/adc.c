@@ -210,13 +210,17 @@ retry:
 		spin_unlock_irqrestore(&adc->lock, flags);
 		return -EAGAIN;
 	}
+/*	if (client->is_ts && adc->ts_pend) {
+		spin_unlock_irqrestore(&adc->lock, flags);
+		return -EAGAIN;
+	}
 
 	if (!list_empty(&client->pend)) {
 		spin_unlock_irqrestore(&adc->lock, flags);
 		usleep_range(250, 500);
 		goto retry;
 	}
-
+*/
 	client->channel = channel;
 	client->nr_samples = nr_samples;
 

@@ -1626,6 +1626,55 @@ err_hw_prot_set:
 err_mem_prot_set:
 	return ret;
 }
+
+static int s5p_mfc_request_sec_pgtable(struct s5p_mfc_dev *dev)
+{
+	int ret;
+	phys_addr_t base;
+	size_t size;
+
+	ion_exynos_contig_heap_info(ION_EXYNOS_ID_MFC_FW, &base, &size);
+	ret = exynos_smc(SMC_DRM_MAKE_PGTABLE, FC_MFC_EXYNOS_ID_MFC_FW, base, size);
+	if (ret) {
+		mfc_err("Failed to make pgtable for MFC_FW\n");
+		return -1;
+	}
+
+	ion_exynos_contig_heap_info(ION_EXYNOS_ID_MFC_INPUT, &base, &size);
+	ret = exynos_smc(SMC_DRM_MAKE_PGTABLE, FC_MFC_EXYNOS_ID_MFC_INPUT, base, size);
+	if (ret) {
+		mfc_err("Failed to make pgtable for MFC_INPUT\n");
+		return -1;
+	}
+
+	ion_exynos_contig_heap_info(ION_EXYNOS_ID_FIMD_VIDEO, &base, &size);
+	ret = exynos_smc(SMC_DRM_MAKE_PGTABLE, FC_MFC_EXYNOS_ID_FIMD_VIDEO, base, size);
+	if (ret) {
+		mfc_err("Failed to make pgtable for FIMD_VIDEO\n");
+		return -1;
+	}
+
+	ion_exynos_contig_heap_info(ION_EXYNOS_ID_MFC_OUTPUT, &base, &size);
+	ret = exynos_smc(SMC_DRM_MAKE_PGTABLE, FC_MFC_EXYNOS_ID_MFC_OUT, base, size);
+	if (ret) {
+		mfc_err("Failed to make pgtable for MFC_OUTPUT\n");
+		return -1;
+	}
+
+	return 0;
+}
+
+static int s5p_mfc_release_sec_pgtable(struct s5p_mfc_dev *dev)
+{
+	int ret;
+
+	ret = exynos_smc(SMC_DRM_CLEAR_PGTABLE, 0, 0, 0);
+	if (ret)
+		mfc_err("Failed to clear secure sysmmu page table.\n");
+
+	return -1;
+}
+
 #endif
 
 /* Open an MFC node */
@@ -1639,6 +1688,8 @@ static int s5p_mfc_open(struct file *file)
 #ifdef CONFIG_EXYNOS_CONTENT_PATH_PROTECTION
 	int magic_offset = -1;
 	enum s5p_mfc_inst_drm_type is_drm = MFCDRM_NONE;
+	phys_addr_t fw_base, sectbl_base;
+	size_t fw_size, sectbl_size;	
 #endif
 
 	mfc_info("mfc driver open called\n");
@@ -1774,6 +1825,9 @@ static int s5p_mfc_open(struct file *file)
 				ret = s5p_mfc_alloc_firmware(dev);
 				if (ret)
 					goto err_fw_alloc;
+				ret = s5p_mfc_load_firmware(dev);
+				if (ret)
+					goto err_fw_load;
 			}
 
 			/* Check for supporting smc */
@@ -1785,6 +1839,26 @@ static int s5p_mfc_open(struct file *file)
 				dev->is_support_smc = 1;
 			}
 			dev->fw_status = 1;
+
+			ion_exynos_contig_heap_info(ION_EXYNOS_ID_SECTBL,
+						&sectbl_base, &sectbl_size);
+			ion_exynos_contig_heap_info(ION_EXYNOS_ID_MFC_FW, &fw_base, &fw_size);
+
+			ret = exynos_smc(SMC_DRM_SECMEM_INFO, sectbl_base, fw_base,
+						dev->variant->buf_size->firmware_code);
+
+			ret = exynos_smc(SMC_DRM_FW_LOADING, fw_base, fw_base,
+						dev->variant->buf_size->firmware_code);
+			if (ret) {
+				mfc_info("MFC DRM F/W(%x) is skipped\n", ret);
+			} else{
+				mfc_info("MFC DRM F/W(%x) is ok\n", ret);
+			}
+			ret = s5p_mfc_request_sec_pgtable(dev);
+			if (ret < 0) {
+				mfc_err("Fail to make MFC secure sysmmu page tables. ret = %d\n", ret);
+			}
+			
 		} else {
 			if (!dev->fw_status) {
 				ret = s5p_mfc_alloc_firmware(dev);
@@ -1856,6 +1930,12 @@ err_pwr_enable:
 	s5p_mfc_release_dev_context_buffer(dev);
 
 err_fw_load:
+#ifdef CONFIG_EXYNOS_CONTENT_PATH_PROTECTION
+		if (dev->is_support_smc) {
+			s5p_mfc_release_sec_pgtable(dev);
+			dev->is_support_smc = 0;
+		}
+#endif
 	s5p_mfc_release_firmware(dev);
 	dev->fw_status = 0;
 
@@ -2006,6 +2086,7 @@ static int s5p_mfc_release(struct file *file)
 #ifdef CONFIG_EXYNOS_CONTENT_PATH_PROTECTION
 					if (ctx->is_drm && dev->is_support_smc) {
 						s5p_mfc_protection_set(dev, 0);
+						s5p_mfc_release_sec_pgtable(dev);
 						dev->is_support_smc = 0;
 					}
 #endif
@@ -2047,6 +2128,7 @@ static int s5p_mfc_release(struct file *file)
 #ifdef CONFIG_EXYNOS_CONTENT_PATH_PROTECTION
 		if (ctx->is_drm && dev->is_support_smc) {
 			s5p_mfc_protection_set(dev, 0);
+			s5p_mfc_release_sec_pgtable(dev);
 			dev->is_support_smc = 0;
 		}
 #endif

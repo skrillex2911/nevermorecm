@@ -897,6 +897,30 @@
 #define RTSYSTEMS_USB_A5R_PID	0x9e69	/* USB-A5R USB to 8 pin modular plug*/
 #define RTSYSTEMS_USB_PW1_PID	0x9e6A	/* USB-PW1 USB to 8 pin modular plug*/
 
+
+
+
+/*
+ * Physik Instrumente
+ * http://www.physikinstrumente.com/en/products/
+ */
+#define PI_VID              0x1a72  /* Vendor ID */
+#define PI_E861_PID         0x1008  /* E-861 piezo controller USB connection */
+
+/*
+ * Physik Instrumente
+ * http://www.physikinstrumente.com/en/products/
+ */
+#define PI_VID              0x1a72  /* Vendor ID */
+#define PI_E861_PID         0x1008  /* E-861 piezo controller USB connection */
+
+/*
+ * Physik Instrumente
+ * http://www.physikinstrumente.com/en/products/
+ */
+#define PI_VID              0x1a72  /* Vendor ID */
+#define PI_E861_PID         0x1008  /* E-861 piezo controller USB connection */
+
 /*
  * Physik Instrumente
  * http://www.physikinstrumente.com/en/products/

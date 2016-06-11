@@ -246,6 +246,16 @@ config KSM
 	  until a program has madvised that an area is MADV_MERGEABLE, and
 	  root has set /sys/kernel/mm/ksm/run to 1 (if CONFIG_SYSFS is set).
 
+config KSM_CHECK_PAGE
+	bool "Check page before scanning"
+	depends on KSM
+	default n
+	help
+	  If enabled, this will check and skip if page is already scanned in
+	  same KSM scan cycle.
+	  This is useful in situation where you have parent and
+	  child process marking same area for KSM scanning.
+
 config DEFAULT_MMAP_MIN_ADDR
         int "Low address space to protect from user allocation"
 	depends on MMU
@@ -463,7 +473,7 @@ config ZSMALLOC_NEW
 
 config PGTABLE_MAPPING
 	bool "Use page table mapping to access object in zsmalloc"
-	depends on ZSMALLOC_NEW
+	depends on ZSMALLOC
 	help
 	  By default, zsmalloc uses a copy-based object mapping method to
 	  access allocations that span two pages. However, if a particular
@@ -478,7 +488,7 @@ config ZSWAP
 	bool "In-kernel swap page compression"
 	depends on FRONTSWAP && CRYPTO
 	select CRYPTO_LZO
-	select ZSMALLOC_NEW
+	select ZSMALLOC
 	default n
 	help
 	  Zswap is a backend for the frontswap mechanism in the VMM.

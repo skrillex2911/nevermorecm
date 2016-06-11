@@ -96,6 +96,7 @@ static int mfd_add_device(struct device *parent, int id,
 		goto fail_device;
 
 	pdev->dev.parent = parent;
+	pdev->dev.type = &mfd_dev_type;
 	pdev->dev.type = &mfd_device_type;
 
 	if (cell->pdata_size) {
@@ -196,7 +197,7 @@ static int mfd_remove_devices_fn(struct device *dev, void *c)
 	const struct mfd_cell *cell;
 	atomic_t **usage_count = c;
 
-	if (dev->type != &mfd_device_type)
+	if (dev->type != &mfd_dev_type)
 		return 0;
 
 	pdev = to_platform_device(dev);

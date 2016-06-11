@@ -830,10 +830,6 @@ int usb_wwan_suspend(struct usb_serial *serial, pm_message_t message)
 
 	spin_lock_irq(&intfdata->susp_lock);
 	if (message.event & PM_EVENT_AUTO) {
-		spin_lock_irq(&intfdata->susp_lock);
-		b = intfdata->in_flight;
-		spin_unlock_irq(&intfdata->susp_lock);
-
 		if (intfdata->in_flight) {
 			spin_unlock_irq(&intfdata->susp_lock);
 			return -EBUSY;
@@ -888,13 +884,15 @@ int usb_wwan_resume(struct usb_serial *serial)
 	dbg("%s entered", __func__);
 
 	spin_lock_irq(&intfdata->susp_lock);
+	intfdata->suspended = 0;
+	spin_unlock_irq(&intfdata->susp_lock);
+
 	for (i = 0; i < serial->num_ports; i++) {
 		/* walk all ports */
 		port = serial->port[i];
 		portdata = usb_get_serial_port_data(port);
 
 		/* skip closed ports */
-		spin_lock_irq(&intfdata->susp_lock);
 		if (!portdata || !portdata->opened)
 			continue;
 
@@ -923,8 +921,6 @@ int usb_wwan_resume(struct usb_serial *serial)
 			}
 		}
 	}
- 	intfdata->suspended = 0;
- 	spin_unlock_irq(&intfdata->susp_lock);
 
 	if (err_count)
 		return -EIO;

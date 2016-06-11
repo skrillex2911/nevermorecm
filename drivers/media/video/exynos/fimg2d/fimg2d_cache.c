@@ -51,7 +51,7 @@ static inline unsigned long virt2phys(struct mm_struct *mm, unsigned long vaddr)
 	lv1d = pgd + (vaddr >> LV1_SHIFT);
 
 	if ((*lv1d & LV1_DESC_MASK) != 0x1) {
-		fimg2d_debug("invalid LV1 descriptor, "
+		fimg2d_err("invalid LV1 descriptor, "
 				"pgd %p lv1d 0x%lx vaddr 0x%lx\n",
 				pgd, *lv1d, vaddr);
 		return 0;
@@ -61,7 +61,7 @@ static inline unsigned long virt2phys(struct mm_struct *mm, unsigned long vaddr)
 				((vaddr & LV2_PT_MASK) >> LV2_SHIFT);
 
 	if ((*lv2d & LV2_DESC_MASK) != 0x2) {
-		fimg2d_debug("invalid LV2 descriptor, "
+		fimg2d_err("invalid LV2 descriptor, "
 				"pgd %p lv2d 0x%lx vaddr 0x%lx\n",
 				pgd, *lv2d, vaddr);
 		return 0;
@@ -136,11 +136,14 @@ enum pt_status fimg2d_check_pagetable(struct mm_struct *mm,
 {
 	unsigned long *pgd;
 	unsigned long *lv1d, *lv2d;
+	pte_t *pte;
 
 	pgd = (unsigned long *)mm->pgd;
 
 	size += offset_in_page(vaddr);
-	size = PAGE_ALIGN(size);
+	vaddr &= PAGE_MASK;
+
+	spin_lock(&mm->page_table_lock);
 
 	while ((long)size > 0) {
 		lv1d = pgd + (vaddr >> LV1_SHIFT);
@@ -157,50 +160,63 @@ enum pt_status fimg2d_check_pagetable(struct mm_struct *mm,
 
 			vma = find_vma(mm, vaddr);
 			if (!vma) {
-				pr_err("%s: vma is null\n", __func__);
+				fimg2d_err("vma is null\n");
+				spin_unlock(&mm->page_table_lock);
 				return PT_FAULT;
 			}
 
 			if (vma->vm_end < (vaddr + size)) {
-				pr_err("%s: vma overflow: %#lx--%#lx, "
+				fimg2d_err("vma overflow: %#lx--%#lx, "
 						"vaddr: %#lx, size: %zd\n",
-						__func__, vma->vm_start,
-						vma->vm_end, vaddr, size);
+						vma->vm_start, vma->vm_end,
+						vaddr, size);
+				spin_unlock(&mm->page_table_lock);
 				return PT_FAULT;
 			}
 
+			spin_unlock(&mm->page_table_lock);
 			handle_mm_fault(mm, vma, vaddr,
 					write ? FAULT_FLAG_WRITE : 0);
+			spin_lock(&mm->page_table_lock);
 
 			if ((*lv1d & LV1_DESC_MASK) != 0x1) {
-				fimg2d_debug("invalid LV1 descriptor, "
+				fimg2d_err("invalid LV1 descriptor, "
 					"pgd %p lv1d 0x%lx vaddr 0x%lx\n",
 					pgd, *lv1d, vaddr);
+				spin_unlock(&mm->page_table_lock);
 				return PT_FAULT;
 			}
 		}
 
 		lv2d = (unsigned long *)phys_to_virt(*lv1d & ~LV2_BASE_MASK) +
 				((vaddr & LV2_PT_MASK) >> LV2_SHIFT);
+		pte = (pte_t *)(lv2d - PTE_HWTABLE_PTRS);
 
-		if (write && (!pte_present(*lv2d) || !pte_write(*lv2d))) {
+		if (!pte_present(*pte) || (write && !pte_write(*pte))) {
 			struct vm_area_struct *vma;
 
 			vma = find_vma(mm, vaddr);
 			if (!vma) {
-				pr_err("%s: vma is null\n", __func__);
+				fimg2d_err("vma is null\n");
+				spin_unlock(&mm->page_table_lock);
 				return PT_FAULT;
 			}
 
 			if (vma->vm_end < (vaddr + size)) {
-				pr_err("%s: vma overflow: %#lx--%#lx, "
+				fimg2d_err("vma overflow: %#lx--%#lx, "
 						"vaddr: %#lx, size: %zd\n",
-						__func__, vma->vm_start,
-						vma->vm_end, vaddr, size);
+						vma->vm_start, vma->vm_end,
+						vaddr, size);
+				spin_unlock(&mm->page_table_lock);
 				return PT_FAULT;
 			}
 
-			handle_mm_fault(mm, vma, vaddr, FAULT_FLAG_WRITE);
+			if (pte_present(*pte) || pte_none(*pte)) {
+				spin_unlock(&mm->page_table_lock);
+				handle_mm_fault(mm, vma, vaddr,
+					write ? FAULT_FLAG_WRITE : 0);
+				spin_lock(&mm->page_table_lock);
+			}
 		}
 
 		/*
@@ -210,15 +226,18 @@ enum pt_status fimg2d_check_pagetable(struct mm_struct *mm,
 		 *	lv2 desc[1:0] = 1x --> 4k page
 		 */
 		if ((*lv2d & LV2_DESC_MASK) != 0x2) {
-			fimg2d_debug("invalid LV2 descriptor, "
+			fimg2d_err("invalid LV2 descriptor, "
 					"pgd %p lv2d 0x%lx vaddr 0x%lx\n",
 					pgd, *lv2d, vaddr);
+			spin_unlock(&mm->page_table_lock);
 			return PT_FAULT;
 		}
 
 		vaddr += PAGE_SIZE;
 		size -= PAGE_SIZE;
 	}
+
+	spin_unlock(&mm->page_table_lock);
 
 	return PT_NORMAL;
 }

@@ -301,7 +301,7 @@ handle_t *ext4_journal_start_sb(struct super_block *sb, int nblocks)
 	handle_t  *handle;
 
 	trace_ext4_journal_start(sb, nblocks, _RET_IP_);
-	if (sb->s_flags & MS_RDONLY)
+	if (sb->s_flags & MS_RDONLY && !journal_current_handle())
 		return ERR_PTR(-EROFS);
 
 	journal = EXT4_SB(sb)->s_journal;
@@ -549,7 +549,7 @@ void ext4_error_inode(struct inode *inode, const char *function,
 	else
 		printk(KERN_ERR "__ext4_error: failed to allocate page buf for panic msg\n");
 	va_end(args);
-	save_error_info(inode->i_sb, function, line);
+//	save_error_info(sb, function, line);
 
 	ext4_handle_error(inode->i_sb, page_buf);
 	if (page_buf)

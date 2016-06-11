@@ -100,6 +100,7 @@ static int page_zero_filled(void *ptr)
 		if (page[pos])
 			return 0;
 	}
+	put_cpu();
 
 	return 1;
 }

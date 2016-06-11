@@ -60,7 +60,7 @@
 #define NR_TO_RECLAIM_PAGES 		(1024*2) /* 8MB, include file pages */
 #define MIN_FREESWAP_PAGES 		(NR_TO_RECLAIM_PAGES*2*NR_CPUS)
 #define MIN_RECLAIM_PAGES 		(NR_TO_RECLAIM_PAGES/8)
-#define MIN_CSWAP_INTERVAL 		(5*HZ) /* 5 senconds */
+#define MIN_CSWAP_INTERVAL 		(10*HZ) /* 10 senconds */
 #else /* CONFIG_SMP */
 #define NR_TO_RECLAIM_PAGES 		1024 /* 4MB, include file pages */
 #define MIN_FREESWAP_PAGES 		(NR_TO_RECLAIM_PAGES*2)
@@ -126,7 +126,7 @@ static uint32_t oom_count = 0;
 
 #endif /* CONFIG_INTERNAL_ISP_START_CAMERA */
 
-static uint32_t lowmem_debug_level = 1;
+static uint32_t lowmem_debug_level = 0;
 static int lowmem_adj[6] = {
 	0,
 	1,
@@ -135,13 +135,12 @@ static int lowmem_adj[6] = {
 };
 static int lowmem_adj_size = 4;
 static int lowmem_minfree[6] = {
-	3 * 512,	/* 6MB */
-	2 * 1024,	/* 8MB */
-	4 * 1024,	/* 16MB */
-	16 * 1024,	/* 64MB */
+	1 * 512,	/* 6MB */
+	1 * 1024,	/* 8MB */
+	1 * 1024,	/* 16MB */
+	64 * 1024,	/* 64MB */
 };
-static int lowmem_minfree_size = 4;
-
+static int lowmem_minfree_size = 8;
 
 static unsigned int offlining;
 #ifdef ENHANCED_LMK_ROUTINE
@@ -216,6 +215,12 @@ static int lmk_hotplug_callback(struct notifier_block *self,
 }
 #endif
 
+#ifdef CONFIG_ANDROID_LMK_ADJ_RBTREE
+static struct task_struct *pick_next_from_adj_tree(struct task_struct *task);
+static struct task_struct *pick_first_task(void);
+static struct task_struct *pick_last_task(void);
+#endif
+
 static int lowmem_shrink(struct shrinker *s, struct shrink_control *sc)
 {
 	struct task_struct *tsk;
@@ -237,17 +242,14 @@ static int lowmem_shrink(struct shrinker *s, struct shrink_control *sc)
 	int selected_tasksize = 0;
 	int selected_oom_score_adj;
 #endif
-#ifdef CONFIG_SAMP_HOTNESS
-	int selected_hotness_adj = 0;
-#endif
 	int array_size = ARRAY_SIZE(lowmem_adj);
 	int other_free = global_page_state(NR_FREE_PAGES) - totalreserve_pages;
 	int other_file = global_page_state(NR_FILE_PAGES) -
 						global_page_state(NR_SHMEM);
 	struct zone *zone;
 
-#if defined(CONFIG_ZRAM_FOR_ANDROID) || defined(CONFIG_ZSWAP)
-	other_file -= total_swapcache_pages;
+#ifdef CONFIG_ZRAM_FOR_ANDROID
+	other_file -= total_swapcache_pages();
 #endif
 
 	if (offlining) {
@@ -319,15 +321,19 @@ static int lowmem_shrink(struct shrinker *s, struct shrink_control *sc)
 	atomic_set(&s_reclaim.lmk_running, 1);
 #endif
 	read_lock(&tasklist_lock);
+#ifdef CONFIG_ANDROID_LMK_ADJ_RBTREE
+ for (tsk = pick_first_task();
+ tsk != pick_last_task();
+ tsk = pick_next_from_adj_tree(tsk)) {
+#else
 	for_each_process(tsk) {
+#endif
 		struct task_struct *p;
 		int oom_score_adj;
 #ifdef ENHANCED_LMK_ROUTINE
 		int is_exist_oom_task = 0;
 #endif
-#ifdef CONFIG_SAMP_HOTNESS
-		int hotness_adj = 0;
-#endif
+
 		if (tsk->flags & PF_KTHREAD)
 			continue;
 
@@ -341,9 +347,6 @@ static int lowmem_shrink(struct shrinker *s, struct shrink_control *sc)
 			continue;
 		}
 		tasksize = get_mm_rss(p->mm);
-#ifdef CONFIG_SAMP_HOTNESS
-		hotness_adj = p->signal->hotness_adj;
-#endif
 		task_unlock(p);
 		if (tasksize <= 0)
 			continue;
@@ -387,29 +390,19 @@ static int lowmem_shrink(struct shrinker *s, struct shrink_control *sc)
 		}
 #else
 		if (selected) {
-#ifdef CONFIG_SAMP_HOTNESS
-			if (min_score_adj <= lowmem_adj[4]) {
-#endif
 			if (oom_score_adj < selected_oom_score_adj)
+#ifdef CONFIG_ANDROID_LMK_ADJ_RBTREE
+				break;
+#else
 				continue;
+#endif
 			if (oom_score_adj == selected_oom_score_adj &&
 			    tasksize <= selected_tasksize)
 				continue;
-#ifdef CONFIG_SAMP_HOTNESS
-			} else {
-				if (hotness_adj > selected_hotness_adj)
-					continue;
-				if (hotness_adj == selected_hotness_adj && tasksize <= selected_tasksize)
-					continue;
-			}
-#endif
 		}
 		selected = p;
 		selected_tasksize = tasksize;
 		selected_oom_score_adj = oom_score_adj;
-#ifdef CONFIG_SAMP_HOTNESS
-		selected_hotness_adj = hotness_adj;
-#endif	
 		lowmem_print(2, "select %d (%s), adj %d, size %d, to kill\n",
 			     p->pid, p->comm, oom_score_adj, tasksize);
 #endif
@@ -417,20 +410,11 @@ static int lowmem_shrink(struct shrinker *s, struct shrink_control *sc)
 #ifdef ENHANCED_LMK_ROUTINE
 	for (i = 0; i < LOWMEM_DEATHPENDING_DEPTH; i++) {
 		if (selected[i]) {
-#ifdef CONFIG_SAMP_HOTNESS	
-			lowmem_print(1, "send sigkill to %d (%s), adj %d,\
-				     size %d ,hotness %d\n",
-				     selected[i]->pid, selected[i]->comm,
-				     selected_oom_score_adj[i],
-				     selected_tasksize[i],
-					 selected_hotness_adj);
-#else
 			lowmem_print(1, "send sigkill to %d (%s), adj %d,\
 				     size %d\n",
 				     selected[i]->pid, selected[i]->comm,
 				     selected_oom_score_adj[i],
 				     selected_tasksize[i]);
-#endif
 			lowmem_deathpending[i] = selected[i];
 			lowmem_deathpending_timeout = jiffies + HZ;
 			send_sig(SIGKILL, selected[i], 0);
@@ -442,15 +426,9 @@ static int lowmem_shrink(struct shrinker *s, struct shrink_control *sc)
 	}
 #else
 	if (selected) {
-#ifdef CONFIG_SAMP_HOTNESS
-		lowmem_print(1, "send sigkill to %d (%s), adj %d, size %d ,hotness %d\n",
-			     selected->pid, selected->comm,
-			     selected_oom_score_adj, selected_tasksize,selected_hotness_adj);
-#else
 		lowmem_print(1, "send sigkill to %d (%s), adj %d, size %d\n",
 			     selected->pid, selected->comm,
 			     selected_oom_score_adj, selected_tasksize);
-#endif
 		lowmem_deathpending_timeout = jiffies + HZ;
 		send_sig(SIGKILL, selected, 0);
 		set_tsk_thread_flag(selected, TIF_MEMDIE);
@@ -576,7 +554,11 @@ static int android_oom_handler(struct notifier_block *nb,
 		oom_score_adj = p->signal->oom_score_adj;
 		if (oom_score_adj < min_score_adj) {
 			task_unlock(p);
+#ifdef CONFIG_ANDROID_LMK_ADJ_RBTREE
+			break;
+#else
 			continue;
+#endif
 		}
 		tasksize = get_mm_rss(p->mm);
 		task_unlock(p);
@@ -983,13 +965,10 @@ static int do_compcache(void * nothing)
 		if (kthread_should_stop())
 			break;
 
-		if (atomic_read(&s_reclaim.kcompcached_running) == 1) {
-			if (rtcc_reclaim_pages(number_of_reclaim_pages) < minimum_reclaim_pages)
-				cancel_soft_reclaim();
+		if (rtcc_reclaim_pages(number_of_reclaim_pages) < minimum_reclaim_pages)
+			cancel_soft_reclaim();
 
-			atomic_set(&s_reclaim.kcompcached_running, 0);
-		}
-
+		atomic_set(&s_reclaim.kcompcached_running, 0);
 		set_current_state(TASK_INTERRUPTIBLE);
 		schedule();
 	}
@@ -1164,6 +1143,85 @@ static const struct kparam_array __param_arr_adj = {
 	.elemsize = sizeof(lowmem_adj[0]),
 	.elem = lowmem_adj,
 };
+#endif
+
+#ifdef CONFIG_ANDROID_LMK_ADJ_RBTREE
+DEFINE_SPINLOCK(lmk_lock);
+struct rb_root tasks_scoreadj = RB_ROOT;
+void add_2_adj_tree(struct task_struct *task)
+{
+	struct rb_node **link = &tasks_scoreadj.rb_node;
+	struct rb_node *parent = NULL;
+	struct task_struct *task_entry;
+	s64 key = task->signal->oom_score_adj;
+	/*
+	 * Find the right place in the rbtree:
+	 */
+	spin_lock(&lmk_lock);
+	while (*link) {
+		parent = *link;
+		task_entry = rb_entry(parent, struct task_struct, adj_node);
+
+		if (key < task_entry->signal->oom_score_adj)
+			link = &parent->rb_right;
+		else
+			link = &parent->rb_left;
+	}
+
+	rb_link_node(&task->adj_node, parent, link);
+	rb_insert_color(&task->adj_node, &tasks_scoreadj);
+	spin_unlock(&lmk_lock);
+}
+
+void delete_from_adj_tree(struct task_struct *task)
+{
+	spin_lock(&lmk_lock);
+	rb_erase(&task->adj_node, &tasks_scoreadj);
+	spin_unlock(&lmk_lock);
+}
+
+
+static struct task_struct *pick_next_from_adj_tree(struct task_struct *task)
+{
+	struct rb_node *next;
+
+	spin_lock(&lmk_lock);
+	next = rb_next(&task->adj_node);
+	spin_unlock(&lmk_lock);
+
+	if (!next)
+		return NULL;
+
+	 return rb_entry(next, struct task_struct, adj_node);
+}
+
+static struct task_struct *pick_first_task(void)
+{
+	struct rb_node *left;
+
+	spin_lock(&lmk_lock);
+	left = rb_first(&tasks_scoreadj);
+	spin_unlock(&lmk_lock);
+
+	if (!left)
+		return NULL;
+
+	return rb_entry(left, struct task_struct, adj_node);
+}
+
+static struct task_struct *pick_last_task(void)
+{
+	struct rb_node *right;
+
+	spin_lock(&lmk_lock);
+	right = rb_last(&tasks_scoreadj);
+	spin_unlock(&lmk_lock);
+
+	if (!right)
+		return NULL;
+
+	return rb_entry(right, struct task_struct, adj_node);
+}
 #endif
 
 module_param_named(cost, lowmem_shrinker.seeks, int, S_IRUGO | S_IWUSR);

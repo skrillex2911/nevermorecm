@@ -28,6 +28,7 @@
 
 #include <linux/mfd/arizona/core.h>
 #include <linux/mfd/arizona/registers.h>
+#include <linux/mfd/arizona/control.h>
 
 #include "arizona.h"
 #include "wm5102.h"
@@ -581,7 +582,7 @@ static int wm5102_sysclk_ev(struct snd_soc_dapm_widget *w,
 			    struct snd_kcontrol *kcontrol, int event)
 {
 	struct snd_soc_codec *codec = w->codec;
-	struct arizona *arizona = dev_get_drvdata(codec->dev);
+	struct arizona *arizona = dev_get_drvdata(codec->dev->parent);
 	struct regmap *regmap = codec->control_data;
 	const struct reg_default *patch = NULL;
 	int i, patch_size;
@@ -762,8 +763,8 @@ SOC_ENUM("LHPF2 Mode", arizona_lhpf2_mode),
 SOC_ENUM("LHPF3 Mode", arizona_lhpf3_mode),
 SOC_ENUM("LHPF4 Mode", arizona_lhpf4_mode),
 
-SOC_ENUM("ISRC1 FSL", arizona_isrc_fsl[0]),
-SOC_ENUM("ISRC2 FSL", arizona_isrc_fsl[1]),
+SOC_VALUE_ENUM("ISRC1 FSL", arizona_isrc_fsl[0]),
+SOC_VALUE_ENUM("ISRC2 FSL", arizona_isrc_fsl[1]),
 
 ARIZONA_MIXER_CONTROLS("Mic", ARIZONA_MICMIX_INPUT_1_SOURCE),
 ARIZONA_MIXER_CONTROLS("Noise", ARIZONA_NOISEMIX_INPUT_1_SOURCE),
@@ -822,6 +823,12 @@ SOC_DOUBLE("HPOUT2 DRE Switch", ARIZONA_DRE_ENABLE,
 	   ARIZONA_DRE2L_ENA_SHIFT, ARIZONA_DRE2R_ENA_SHIFT, 1, 0),
 SOC_SINGLE("EPOUT DRE Switch", ARIZONA_DRE_ENABLE,
 	   ARIZONA_DRE3L_ENA_SHIFT, 1, 0),
+
+SOC_SINGLE("DRE Threshold", ARIZONA_DRE_CONTROL_2,
+	   ARIZONA_DRE_T_LOW_SHIFT, 63, 0),
+
+SOC_SINGLE("DRE Low Level ABS", ARIZONA_DRE_CONTROL_3,
+	   ARIZONA_DRE_LOW_LEVEL_ABS_SHIFT, 15, 0),
 
 SOC_ENUM("Output Ramp Up", arizona_out_vi_ramp),
 SOC_ENUM("Output Ramp Down", arizona_out_vd_ramp),
@@ -1603,6 +1610,8 @@ static int wm5102_codec_probe(struct snd_soc_codec *codec)
 	snd_soc_dapm_disable_pin(&codec->dapm, "CLAMP");
 
 	priv->core.arizona->dapm = &codec->dapm;
+
+	arizona_control_init(codec);
 
 	return 0;
 }

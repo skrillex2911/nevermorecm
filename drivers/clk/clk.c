@@ -1068,12 +1068,11 @@ static int __clk_set_parent(struct clk *clk, struct clk *parent)
 	if (!clk->parents)
 		clk->parents = kzalloc((sizeof(struct clk*) * clk->num_parents),
 								GFP_KERNEL);
-
-	/*
+         /*
 	 * find index of new parent clock using cached parent ptrs,
 	 * or if not yet cached, use string name comparison and cache
 	 * them now to avoid future calls to __clk_lookup.
-	 */
+ 	 */
 	for (i = 0; i < clk->num_parents; i++) {
 		if (clk->parents && clk->parents[i] == parent)
 			break;
@@ -1233,7 +1232,7 @@ void __clk_init(struct device *dev, struct clk *clk)
 	 * for clock drivers to statically initialize clk->parents.
 	 */
 	if (clk->num_parents && !clk->parents) {
-		clk->parents = kmalloc((sizeof(struct clk*) * clk->num_parents),
+		clk->parents = kzalloc((sizeof(struct clk*) * clk->num_parents),
 				GFP_KERNEL);
 		/*
 		 * __clk_lookup returns NULL for parents that have not been
