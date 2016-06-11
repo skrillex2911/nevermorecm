@@ -1,0 +1,1 @@
+cmd_drivers/input/touchscreen/built-in.o :=  ../hyper/bin/arm-linux-androideabi-ld -EL    -r -o drivers/input/touchscreen/built-in.o drivers/input/touchscreen/synaptics_i2c_rmi.o drivers/input/touchscreen/rmi_dev.o drivers/input/touchscreen/rmi_fw_update.o drivers/input/touchscreen/rmi_f54.o 

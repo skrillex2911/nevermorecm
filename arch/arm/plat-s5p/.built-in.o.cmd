@@ -1,0 +1,1 @@
+cmd_arch/arm/plat-s5p/built-in.o :=  ../hyper/bin/arm-linux-androideabi-ld -EL    -r -o arch/arm/plat-s5p/built-in.o arch/arm/plat-s5p/clock.o arch/arm/plat-s5p/irq.o arch/arm/plat-s5p/irq-gpioint.o arch/arm/plat-s5p/pm.o arch/arm/plat-s5p/irq-pm.o arch/arm/plat-s5p/sleep.o arch/arm/plat-s5p/dev-mfc.o arch/arm/plat-s5p/setup-mipiphy.o 

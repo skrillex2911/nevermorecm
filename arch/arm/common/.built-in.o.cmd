@@ -1,0 +1,1 @@
+cmd_arch/arm/common/built-in.o :=  ../hyper/bin/arm-linux-androideabi-ld -EL    -r -o arch/arm/common/built-in.o arch/arm/common/gic.o arch/arm/common/bL_head.o arch/arm/common/bL_entry.o arch/arm/common/bL_switcher.o arch/arm/common/bL_vlock.o 

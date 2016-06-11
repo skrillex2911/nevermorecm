@@ -1,0 +1,1 @@
+cmd_drivers/thermal/built-in.o :=  ../hyper/bin/arm-linux-androideabi-ld -EL    -r -o drivers/thermal/built-in.o drivers/thermal/thermal_sys.o drivers/thermal/cpu_cooling.o drivers/thermal/exynos_thermal.o 

@@ -35,7 +35,6 @@
 #include <mach/tmu.h>
 #include <mach/asv-exynos.h>
 #include <plat/cpu.h>
-#include <mach/sec_debug.h>
 
 struct lpj_info {
 	unsigned long   ref;
@@ -65,8 +64,13 @@ static unsigned long lpj[CA_END];
 #define DOWN_STEP_NEW		600000
 #define UP_STEP_OLD		550000
 #define UP_STEP_NEW		600000
+<<<<<<< HEAD
+#define STEP_LEVEL_CA7_MAX	650000
+#define STEP_LEVEL_CA15_MIN	700000
+=======
 #define STEP_LEVEL_CA7_MAX	600000
 #define STEP_LEVEL_CA15_MIN	800000
+>>>>>>> c0e6bff89aedad8e2edc25ab9b40d985f650f564
 
 #define LIMIT_COLD_VOLTAGE	1250000
 #define CPU_MAX_COUNT		4
@@ -541,8 +545,6 @@ static int exynos_target(struct cpufreq_policy *policy,
 	/* save the frequency & cpu number */
 	set_req_freq(policy->cpu, target_freq);
 
-	sec_debug_aux_log(SEC_DEBUG_AUXLOG_CPU_CLOCK_SWITCH_CHANGE, "IN  : cpu=%d cluster=%c pre=%d, new=%d", policy->cpu, (cur == CA7 ? 'L' : 'B'), freqs[cur]->old, target_freq);
-
 #if defined(CONFIG_CPU_FREQ_GOV_USERSPACE) || defined(CONFIG_CPU_FREQ_GOV_PERFORMANCE)
 	if ((strcmp(policy->governor->name, "userspace") == 0)
 		|| strcmp(policy->governor->name, "performance") == 0) {
@@ -613,8 +615,6 @@ done:
 		exynos_switch(policy, !cur);
 #endif
 out:
- 	sec_debug_aux_log(SEC_DEBUG_AUXLOG_CPU_CLOCK_SWITCH_CHANGE, "OUT : cpu=%d cluster=%c pre=%d, new=%d other=%x", \
-		policy->cpu, (cur == CA7 ? 'L' : 'B'), freqs[cur]->old, VIRT_FREQ(new_freq,cur), do_switch << 2 | later << 1 | (ret == 0 ? 0 : 1));
 
 	mutex_unlock(&cpufreq_lock);
 
