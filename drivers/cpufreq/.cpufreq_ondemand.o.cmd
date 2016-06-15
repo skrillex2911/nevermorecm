@@ -3,6 +3,7 @@ cmd_drivers/cpufreq/cpufreq_ondemand.o := ccache ../hyper/bin/arm-linux-androide
 source_drivers/cpufreq/cpufreq_ondemand.o := drivers/cpufreq/cpufreq_ondemand.c
 
 deps_drivers/cpufreq/cpufreq_ondemand.o := \
+    $(wildcard include/config/exynos5/dynamic/cpu/hotplug.h) \
     $(wildcard include/config/cpu/freq/default/gov/ondemand.h) \
     $(wildcard include/config/x86.h) \
   include/linux/kernel.h \
@@ -571,6 +572,112 @@ deps_drivers/cpufreq/cpufreq_ondemand.o := \
     $(wildcard include/config/no/generic/pci/ioport/map.h) \
     $(wildcard include/config/generic/pci/iomap.h) \
   arch/arm/mach-exynos/include/mach/io.h \
+  include/linux/fb.h \
+    $(wildcard include/config/fb/backlight.h) \
+    $(wildcard include/config/fb/deferred/io.h) \
+    $(wildcard include/config/fb/tileblitting.h) \
+    $(wildcard include/config/fb/foreign/endian.h) \
+    $(wildcard include/config/fb/both/endian.h) \
+    $(wildcard include/config/fb/big/endian.h) \
+    $(wildcard include/config/fb/little/endian.h) \
+  include/linux/i2c.h \
+    $(wildcard include/config/i2c.h) \
+    $(wildcard include/config/i2c/boardinfo.h) \
+  include/linux/mod_devicetable.h \
+    $(wildcard include/config/input/expanded/abs.h) \
+  include/linux/of.h \
+    $(wildcard include/config/sparc.h) \
+    $(wildcard include/config/of/dynamic.h) \
+    $(wildcard include/config/of.h) \
+  include/linux/kgdb.h \
+    $(wildcard include/config/have/arch/kgdb.h) \
+    $(wildcard include/config/kgdb.h) \
+  include/linux/serial_8250.h \
+  include/linux/serial_core.h \
+    $(wildcard include/config/console/poll.h) \
+    $(wildcard include/config/type.h) \
+    $(wildcard include/config/irq.h) \
+    $(wildcard include/config/serial/core/console.h) \
+  include/linux/serial.h \
+  include/linux/circ_buf.h \
+  include/linux/tty.h \
+  include/linux/fs.h \
+    $(wildcard include/config/fadv/noactive.h) \
+    $(wildcard include/config/fs/posix/acl.h) \
+    $(wildcard include/config/quota.h) \
+    $(wildcard include/config/fsnotify.h) \
+    $(wildcard include/config/ima.h) \
+    $(wildcard include/config/debug/writecount.h) \
+    $(wildcard include/config/file/locking.h) \
+    $(wildcard include/config/async/fsync.h) \
+    $(wildcard include/config/fs/xip.h) \
+    $(wildcard include/config/migration.h) \
+  include/linux/limits.h \
+  include/linux/ioctl.h \
+  arch/arm/include/generated/asm/ioctl.h \
+  include/asm-generic/ioctl.h \
+  include/linux/blk_types.h \
+    $(wildcard include/config/blk/dev/integrity.h) \
+  include/linux/kdev_t.h \
+  include/linux/dcache.h \
+  include/linux/rculist_bl.h \
+  include/linux/list_bl.h \
+  include/linux/bit_spinlock.h \
+  include/linux/path.h \
+  include/linux/radix-tree.h \
+  include/linux/semaphore.h \
+  include/linux/fiemap.h \
+  include/linux/shrinker.h \
+  include/linux/migrate_mode.h \
+  include/linux/quota.h \
+    $(wildcard include/config/quota/netlink/interface.h) \
+  include/linux/dqblk_xfs.h \
+  include/linux/dqblk_v1.h \
+  include/linux/dqblk_v2.h \
+  include/linux/dqblk_qtree.h \
+  include/linux/nfs_fs_i.h \
+  include/linux/fcntl.h \
+  /home/jwchen/nevermore/arch/arm/include/asm/fcntl.h \
+  include/asm-generic/fcntl.h \
+    $(wildcard include/config/scfs/lower/pagecache/invalidation.h) \
+  include/linux/err.h \
+  include/linux/major.h \
+  include/linux/termios.h \
+  /home/jwchen/nevermore/arch/arm/include/asm/termios.h \
+  /home/jwchen/nevermore/arch/arm/include/asm/termbits.h \
+  /home/jwchen/nevermore/arch/arm/include/asm/ioctls.h \
+  include/asm-generic/ioctls.h \
+  include/linux/tty_driver.h \
+  include/linux/cdev.h \
+  include/linux/tty_ldisc.h \
+  include/linux/pps_kernel.h \
+    $(wildcard include/config/ntp/pps.h) \
+  include/linux/pps.h \
+  include/linux/sysrq.h \
+    $(wildcard include/config/magic/sysrq.h) \
+  include/linux/platform_device.h \
+    $(wildcard include/config/suspend.h) \
+    $(wildcard include/config/hibernate/callbacks.h) \
+  /home/jwchen/nevermore/arch/arm/include/asm/kgdb.h \
+  include/linux/ptrace.h \
+  include/linux/backlight.h \
+  include/linux/slab.h \
+    $(wildcard include/config/slab/debug.h) \
+    $(wildcard include/config/failslab.h) \
+    $(wildcard include/config/slub.h) \
+    $(wildcard include/config/slob.h) \
+    $(wildcard include/config/debug/slab.h) \
+    $(wildcard include/config/slab.h) \
+  include/linux/slub_def.h \
+    $(wildcard include/config/slub/stats.h) \
+    $(wildcard include/config/slub/debug.h) \
+  include/linux/kmemleak.h \
+    $(wildcard include/config/debug/kmemleak.h) \
+  include/linux/pm_qos.h \
+  include/linux/miscdevice.h \
+  arch/arm/mach-exynos/include/mach/cpufreq.h \
+    $(wildcard include/config/arm/exynos/iks/cpufreq.h) \
+    $(wildcard include/config/arm/exynos/cpufreq.h) \
 
 drivers/cpufreq/cpufreq_ondemand.o: $(deps_drivers/cpufreq/cpufreq_ondemand.o)
 
