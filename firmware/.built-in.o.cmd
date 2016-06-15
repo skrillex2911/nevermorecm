@@ -1,1 +1,0 @@
-cmd_firmware/built-in.o :=  ../hyper6/bin/arm-eabi-ld -EL    -r -o firmware/built-in.o firmware/ssp.fw.gen.o firmware/ssp_crashed.fw.gen.o firmware/tsp_synaptics/synaptics_b0_h.fw.gen.o firmware/tsp_synaptics/synaptics_b0_5_1.fw.gen.o firmware/tsp_synaptics/synaptics_b0_fac.fw.gen.o firmware/tsp_synaptics/synaptics_b0_5_1_fac.fw.gen.o 

@@ -1,1 +1,0 @@
-cmd_drivers/media/video/exynos/mfc/built-in.o :=  ../hyper6/bin/arm-eabi-ld -EL    -r -o drivers/media/video/exynos/mfc/built-in.o drivers/media/video/exynos/mfc/s5p-mfc.o drivers/media/video/exynos/mfc/s5p_mfc_opr_v6.o drivers/media/video/exynos/mfc/s5p_mfc_cmd_v6.o 

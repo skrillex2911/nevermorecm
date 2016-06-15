@@ -1,1 +1,0 @@
-cmd_drivers/media/video/exynos/fimc-is-sensor/exynos_sensor.o := ../hyper6/bin/arm-eabi-ld -EL    -r -o drivers/media/video/exynos/fimc-is-sensor/exynos_sensor.o drivers/media/video/exynos/fimc-is-sensor/6b2_vision.o 

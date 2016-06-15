@@ -1,1 +1,0 @@
-cmd_drivers/media/video/exynos/tv/built-in.o :=  ../hyper6/bin/arm-eabi-ld -EL    -r -o drivers/media/video/exynos/tv/built-in.o drivers/media/video/exynos/tv/s5p-hdmi.o drivers/media/video/exynos/tv/s5p-mixer.o 

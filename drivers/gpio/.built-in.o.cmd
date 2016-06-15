@@ -1,1 +1,0 @@
-cmd_drivers/gpio/built-in.o :=  ../hyper6/bin/arm-eabi-ld -EL    -r -o drivers/gpio/built-in.o drivers/gpio/gpiolib.o drivers/gpio/devres.o drivers/gpio/secgpio_dvs.o drivers/gpio/gpio-arizona.o drivers/gpio/gpio-samsung.o 
