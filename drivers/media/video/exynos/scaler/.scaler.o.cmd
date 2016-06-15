@@ -1,1 +1,0 @@
-cmd_drivers/media/video/exynos/scaler/scaler.o := ../hyper/bin/arm-linux-androideabi-ld -EL    -r -o drivers/media/video/exynos/scaler/scaler.o drivers/media/video/exynos/scaler/scaler-core.o drivers/media/video/exynos/scaler/scaler-regs.o drivers/media/video/exynos/scaler/scaler-vb2.o 

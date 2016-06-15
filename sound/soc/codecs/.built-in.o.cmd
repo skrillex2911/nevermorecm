@@ -1,1 +1,0 @@
-cmd_sound/soc/codecs/built-in.o :=  ../hyper/bin/arm-linux-androideabi-ld -EL    -r -o sound/soc/codecs/built-in.o sound/soc/codecs/snd-soc-arizona.o sound/soc/codecs/snd-soc-wm5102.o sound/soc/codecs/snd-soc-wm-adsp.o 
