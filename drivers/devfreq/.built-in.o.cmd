@@ -1,0 +1,1 @@
+cmd_drivers/devfreq/built-in.o :=  ../hyper6/bin/arm-eabi-ld -EL    -r -o drivers/devfreq/built-in.o drivers/devfreq/devfreq.o drivers/devfreq/exynos_ppmu.o drivers/devfreq/governor_simpleondemand.o drivers/devfreq/governor_simpleusage.o drivers/devfreq/exynos5410_bus_int.o drivers/devfreq/exynos5410_bus_mif.o drivers/devfreq/exynos5410_volt_ctrl.o drivers/devfreq/noc_probe.o 

@@ -1,0 +1,1 @@
+cmd_drivers/mfd/built-in.o :=  ../hyper6/bin/arm-eabi-ld -EL    -r -o drivers/mfd/built-in.o drivers/mfd/arizona-core.o drivers/mfd/arizona-irq.o drivers/mfd/arizona-i2c.o drivers/mfd/arizona-spi.o drivers/mfd/wm5102-tables.o drivers/mfd/wm5110-tables.o drivers/mfd/mfd-core.o drivers/mfd/max77803.o drivers/mfd/max77803-irq.o drivers/mfd/sec-core.o drivers/mfd/sec-irq.o 

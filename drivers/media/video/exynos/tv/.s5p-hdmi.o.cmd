@@ -1,0 +1,1 @@
+cmd_drivers/media/video/exynos/tv/s5p-hdmi.o := ../hyper6/bin/arm-eabi-ld -EL    -r -o drivers/media/video/exynos/tv/s5p-hdmi.o drivers/media/video/exynos/tv/hdcp_drv.o drivers/media/video/exynos/tv/hdmi_drv.o drivers/media/video/exynos/tv/hdmi_edid.o drivers/media/video/exynos/tv/hdmi_reg_5xx0.o drivers/media/video/exynos/tv/hdmiphy_conf_5410.o 
