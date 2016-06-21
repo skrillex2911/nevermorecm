@@ -29,9 +29,9 @@
 
 
 #define SGX_DEFAULT_CLOCK   350
-#define SGX_DEFAULT_VOLTAGE 875000
-#define WAKEUP_LOCK_CLOCK   350
-#define WAKEUP_LOCK_VOLTAGE 875000
+#define SGX_DEFAULT_VOLTAGE 850000
+#define WAKEUP_LOCK_CLOCK   266
+#define WAKEUP_LOCK_VOLTAGE 850000
 
 #if defined(CONFIG_ARM_EXYNOS5410_BUS_DEVFREQ)
 static struct pm_qos_request exynos5_g3d_cpu_qos;
@@ -54,7 +54,7 @@ int sec_gpu_setting_voltage = SGX_DEFAULT_VOLTAGE;
 
 static DEFINE_MUTEX(lock);
 
-static unsigned int qos_cpu_freq = 400000;
+static unsigned int qos_cpu_freq = 600000;
 static unsigned int qos_mif_freq = 200000;
 static unsigned int qos_mif2_freq = 400000;
 static unsigned int qos_int_freq = 200000;
