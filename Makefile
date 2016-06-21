@@ -378,7 +378,7 @@ KBUILD_CFLAGS   := -DNDEBUG -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs \
  		   -Wno-error=maybe-uninitialized \
  		   -fno-exceptions -Wno-multichar \
  		   -ffast-math -pipe \
- 		   -mtune=cortex-a15.cortex-a7 -marm -mfpu=neon-vfpv4 -mfloat-abi=hard \
+ 		   -mtune=cortex-a15.cortex-a7 -marm -mfpu=neon-vfpv4 \
  		   
 
 
