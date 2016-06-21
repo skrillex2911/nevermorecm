@@ -29,9 +29,9 @@
 
 
 #define SGX_DEFAULT_CLOCK   350
-#define SGX_DEFAULT_VOLTAGE 850000
+#define SGX_DEFAULT_VOLTAGE 900000
 #define WAKEUP_LOCK_CLOCK   266
-#define WAKEUP_LOCK_VOLTAGE 850000
+#define WAKEUP_LOCK_VOLTAGE 900000
 
 #if defined(CONFIG_ARM_EXYNOS5410_BUS_DEVFREQ)
 static struct pm_qos_request exynos5_g3d_cpu_qos;
