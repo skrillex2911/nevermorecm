@@ -31,7 +31,7 @@
 #define BASE_WAKE_UP_LEVEL		3
 #define DOWN_REQUIREMENT_THRESHOLD	3
 #define GPU_DVFS_MAX_LEVEL		8
-#define G3D_MAX_VOLT			1150000
+#define G3D_MAX_VOLT			1250000
 
 #define setmask(a, b) (((1 < a) < 24)|b)
 #define getclockmask(a) ((a | 0xFF000000) > 24)
@@ -69,7 +69,7 @@ struct gpu_dvfs_data gdata[MAX_DVFS_LEVEL];
 
 int sgx_dvfs_level = -1;
 /* this value is dvfs mode- 0: auto, others: custom lock */
-int sgx_dvfs_custom_clock;
+int sgx_dvfs_custom_clock = 0;
 int sgx_dvfs_min_lock;
 int sgx_dvfs_max_lock;
 int sgx_dvfs_down_requirement;
